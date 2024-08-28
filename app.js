@@ -57,6 +57,32 @@ app.post('/task/add', async function(req, res) {
   }
 });
 
+app.post('/task/delete', async function(req, res) {
+  const tasksToDel = req.body.tasks || [];
+
+  try {
+    // Retrieve all tasks
+    const tasks = await client.lRange('tasks', 0, -1);
+    console.log('Current tasks:', tasks); // Debugging: Print current tasks
+
+    // If tasksToDel is not an array, convert it to one
+    const tasksArray = Array.isArray(tasksToDel) ? tasksToDel : [tasksToDel];
+
+    // Remove each task in tasksToDel
+    for (const task of tasksArray) {
+      // Remove all occurrences of the task from the list
+      const removalResult = await client.lRem('tasks', 0, task);
+      console.log(`Removing task: "${task}", Result: ${removalResult}`); // Debugging: Print removal result
+    }
+
+    console.log('Tasks Deleted...');
+    res.redirect('/');
+  } catch (err) {
+    console.error('Error deleting tasks:', err);
+    res.status(500).send('Error deleting tasks');
+  }
+});
+
 // Start the server
 app.listen(3000, () => {
   console.log('Server Started On Port 3000');
