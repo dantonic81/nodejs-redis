@@ -42,6 +42,21 @@ app.get('/', async function (req, res) {
   }
 });
 
+// Route to add a task
+app.post('/task/add', async function(req, res) {
+  const task = req.body.task;
+
+  try {
+    // Use the new 'rPush' method with 'await'
+    await client.rPush('tasks', task);
+    console.log('Task Added...');
+    res.redirect('/');
+  } catch (err) {
+    console.error('Error adding task:', err);
+    res.status(500).send('Error adding task');
+  }
+});
+
 // Start the server
 app.listen(3000, () => {
   console.log('Server Started On Port 3000');
