@@ -30,15 +30,23 @@ app.get('/', async function (req, res) {
   const title = 'Task List';
 
   try {
-    // Use the new 'lRange' method with 'await'
+    // Use 'await' with 'lRange' to fetch all tasks from Redis
     const tasks = await client.lRange('tasks', 0, -1);
+
+    // Use 'await' with 'hGetAll' to fetch the call details
+    const call = await client.hGetAll('call');
+
+    // Render the 'index' view with the fetched data
     res.render('index', {
       title: title,
       tasks: tasks,
+      call: call // Pass the retrieved call details
     });
+
   } catch (err) {
-    console.error('Error fetching tasks:', err);
-    res.status(500).send('Error fetching tasks');
+    // Log and handle any errors that occur during data fetching
+    console.error('Error fetching tasks or call details:', err);
+    res.status(500).send('Error fetching tasks or call details');
   }
 });
 
@@ -82,6 +90,29 @@ app.post('/task/delete', async function(req, res) {
     res.status(500).send('Error deleting tasks');
   }
 });
+
+app.post('/call/add', async function(req, res) {
+    try {
+        // Create the new call object from request body
+        const newCall = {
+            name: req.body.name,
+            company: req.body.company,
+            phone: req.body.phone,
+            time: req.body.time,
+        };
+
+        // Use hSet to add multiple fields to the hash 'call'
+        const reply = await client.hSet('call', newCall);
+        console.log('Redis Response:', reply); // Logs number of fields added
+
+        // Redirect after successfully adding the call data
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error adding call:', err);
+        res.status(500).send('Error adding call');
+    }
+});
+
 
 // Start the server
 app.listen(3000, () => {
